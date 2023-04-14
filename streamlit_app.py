@@ -25,15 +25,11 @@ fruits_to_show = my_fruit_list.loc[fruits_selected]
 # Display the table on the page.
 streamlit.dataframe(fruits_to_show)
 
-
-
-
 #created the repeatable code block
 def get_fruityvice_data(this_fruit_choice):
   fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
   fruityvice_normalized = pandas.json_normalize(fruityvice_response.json())
   return fruityvice_normalized
-
 
 #New section to add fruityvice
 streamlit.header("Fruityvice Fruit Advice!")
@@ -48,19 +44,27 @@ try:
 except URLError as e:
   streamlit.error()
 
+#snowflake funcs
+def get_fruit_load_list():
+  with mycnx.cursor() as my_cur:
+    my_cur.execute("select * from pc_rivery_db.public.fruit_load_list")
+    return my_cur.fetchall()
 
-#testing snowflake
-streamlit.stop()
+def insert_row_snowflake(new_fruit):
+  with my_cx.cursor() as my_cur:
+    my_cur.execute("insert into fruit_load_list values ('" + new_fruit + "')")
+    return "Thanks for adding " + new_fruit
 
-
-
-my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
-my_cur = my_cnx.cursor()
-my_cur.execute("select * from pc_rivery_db.public.fruit_load_list")
-my_data_rows = my_cur.fetchall()
-streamlit.header("The fruit load list contains:")
-streamlit.dataframe(my_data_rows)
+if streamlit.button('Get Fruit Load List'):
+  my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+  my_data_rows = my_cur.fetchall()
+  my_cnx.close()
+  streamlit.dataframe(my_data_rows)
+   
 add_my_fruit = streamlit.text_input('What fruit would you like to add?')
-streamlit.write('Thanks for adding ', add_my_fruit)
 
-my_cur.execute("insert into fruit_load_list values ('from streamlit');")
+if streamlit.button('Add a fruit to the list'):
+  my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+  back_from_frunction = insert_row_snowflake(add_my_fruit)
+  my_cnx.close()
+  streamlit.text(back_from function)
